@@ -10,7 +10,7 @@ header_fmtstr = "<ccihhiiIIhhiiIIii"
 #           | (2 x 8bit char)  |   determine if it is a bitmap. This field
 #           |                  |   should always be 'BM' for Windows BMP files.
 # ----------+------------------+------------------------------------------------
-#    0x02   |       4          |   The size in bytes of the file. 4,294,927,296
+#    0x02   |       4          |   The size in bytes of the file. 4,294,967,296
 #           |   (32bit int)    |   bytes theoretical maximum size. (~3.95GB)
 # ----------+------------------+------------------------------------------------
 #    0x06   |       2          |   Reserved: Application dependant.
@@ -84,14 +84,16 @@ img = open(file, 'r+b')
 header = struct.unpack_from(header_fmtstr, img.read(54))
 pixels = bytes()
 
-# The 6th index in the header key tells us where to start reading and writing
-# pixels.
+# The header data at index 5 tells us the header length.
+# Here we move the cursor to the end of the header data.
 img.seek(header[5])
 
 # Loop through the pixels and reverse the bit 
 for byt in img.read(header[12]):
   pixels += int.to_bytes(255 - byt, 1, 'little')
 
+# Since we moved the cursor to read the pixels, we need to reset the cursor
+# position and write the next pixel data.
 img.seek(header[5])
 img.write(pixels)
 img.close()
